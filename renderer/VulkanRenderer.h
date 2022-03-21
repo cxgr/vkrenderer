@@ -24,7 +24,7 @@ public:
 private:
 	int frameIdx = 0;
 
-	Mesh firstMesh;
+	std::vector<Mesh> meshes;
 
 	GLFWwindow* window;
 	VkInstance vkInstance;

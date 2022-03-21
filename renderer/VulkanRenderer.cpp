@@ -17,19 +17,39 @@ int VulkanRenderer::Init(GLFWwindow* window)
 		CreateSurface();
 		GetPhysicalDevice();
 		CreateLogicalDevice();
-
-		std::vector<Vertex> meshVerts = {
-						{{0.4, -0.4, 0.0}},
-			{{0.4, 0.4, 0.0}},
-			{{-0.4, 0.4, 0.0}}
-		};
-		firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, &meshVerts);
-
 		CreateSwapchain();
 		CreateRenderPass();
 		CreateGraphicsPipeline();
 		CreateFramebuffers();
 		CreateCommandPool();
+
+		std::vector<Vertex> meshVerts1 =
+		{
+			{{-0.1, -0.4, 0.0}, {1.0, 0.0, 0.0}},
+			{{-0.1, 0.4, 0.0}, {0.0, 1.0, 0.0}},
+			{{-0.9, 0.4, 0.0}, {0.0, 0.0, 1.0}},
+			{{-0.9, -0.4, 0.0}, {1.0, 1.0, 0.0}}
+		};
+
+		std::vector<Vertex> meshVerts2 =
+		{
+			{{0.9, -0.4, 0.0}, {1.0, 0.0, 0.0}},
+			{{0.9, 0.2, 0.0}, {0.0, 1.0, 0.0}},
+			{{0.1, 0.4, 0.0}, {0.0, 0.0, 1.0}},
+			{{0.1, -0.4, 0.0}, {1.0, 1.0, 0.0}}
+		};
+
+		std::vector<uint32_t> meshIdx =
+		{
+			0, 1, 2,
+			2, 3, 0
+		};
+
+		meshes.push_back(Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice,
+			graphicsQueue, graphicsCommandPool, &meshVerts1, &meshIdx));
+		meshes.push_back(Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice,
+			graphicsQueue, graphicsCommandPool, &meshVerts2, &meshIdx));
+
 		CreateCommandBuffers();
 		RecordCommands();
 		CreateSyncObjects();
@@ -89,7 +109,8 @@ void VulkanRenderer::Cleanup()
 {
 	vkDeviceWaitIdle(mainDevice.logicalDevice);
 
-	firstMesh.DestroyVertexBuffer();
+	for (auto& m : meshes)
+		m.DestroyBuffers();
 
 	for (size_t i = 0; i < MAX_QUEUED_DRAWS; ++i)
 	{
@@ -347,11 +368,17 @@ void VulkanRenderer::CreateGraphicsPipeline()
 	bindingDesc.stride = sizeof(Vertex);
 	bindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	std::array<VkVertexInputAttributeDescription, 1> attributeDescs;
+	std::array<VkVertexInputAttributeDescription, 2> attributeDescs;
+
 	attributeDescs[0].binding = 0;
 	attributeDescs[0].location = 0;
 	attributeDescs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 	attributeDescs[0].offset = offsetof(Vertex, pos);
+
+	attributeDescs[1].binding = 0;
+	attributeDescs[1].location = 1;
+	attributeDescs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescs[1].offset = offsetof(Vertex, col);
 
 	//vert input
 	VkPipelineVertexInputStateCreateInfo viCreateInfo = {};
@@ -570,12 +597,15 @@ void VulkanRenderer::RecordCommands()
 		{
 			vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-			VkBuffer vertBuffers[] = { firstMesh.GetVertexBuffer() };
-			std::cout << firstMesh.GetVertexBuffer() << "  " << firstMesh.GetVertexCount() << std::endl;
-			VkDeviceSize offsets[] = {0};
-			vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertBuffers, offsets);
+			for (size_t j = 0; j < meshes.size(); ++j)
+			{
+				VkBuffer vertBuffers[] = { meshes[j].GetVertexBuffer()};
+				VkDeviceSize offsets[] = { 0 };
+				vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertBuffers, offsets);
+				vkCmdBindIndexBuffer(commandBuffers[i], meshes[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(firstMesh.GetVertexCount()), 1, 0, 0);
+				vkCmdDrawIndexed(commandBuffers[i], meshes[j].GetIndexCount(), 1, 0, 0, 0);
+			}
 		}
 		vkCmdEndRenderPass(commandBuffers[i]);
 

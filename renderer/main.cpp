@@ -1,4 +1,4 @@
-#include <vulkan/vulkan.hpp>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -23,8 +23,8 @@ int main()
 {
 	InitWindow();
 
-	if (renderer.Init(window) == 1)
-		return 1;
+	if (renderer.Init(window) == EXIT_FAILURE)
+		return EXIT_FAILURE;
 
 	while (!glfwWindowShouldClose(window))
 	{
