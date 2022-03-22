@@ -26,10 +26,26 @@ int main()
 	if (renderer.Init(window) == EXIT_FAILURE)
 		return EXIT_FAILURE;
 
+	auto angle = 0.0f;
+	auto deltaTime = 0.0f;
+	auto lastTime = 0.0f;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
-		renderer.Draw();
+
+		float now = glfwGetTime();
+		deltaTime = now - lastTime;
+		lastTime = now;
+
+		angle += 10 * deltaTime;
+		if (angle > 360.0f)
+			angle -= 360.0f;
+
+		renderer.UpdateModel(glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f)));
+
+		if (0 == glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+			renderer.Draw();
 	}
 
 	renderer.Cleanup();
