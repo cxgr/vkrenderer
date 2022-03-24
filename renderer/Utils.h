@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include <GLFW/glfw3.h>
 const int MAX_QUEUED_DRAWS = 2;
+const int MAX_MESHES = 200;
 const uint64_t DRAW_TIMEOUT = std::numeric_limits<uint64_t>::max();
 
 const std::vector<const char*> wantedDeviceExtensions =

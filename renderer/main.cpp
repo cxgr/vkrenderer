@@ -42,7 +42,17 @@ int main()
 		if (angle > 360.0f)
 			angle -= 360.0f;
 
-		renderer.UpdateModel(glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f)));
+		glm::mat4 model0(1.0f);
+		glm::mat4 model1(1.0f);
+
+		model0 = glm::translate(model0, glm::vec3(-2.0f, 0.0f, -5.0f));
+		model0 = glm::rotate(model0, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		model1 = glm::translate(model1, glm::vec3(2.0f, 0.0f, -5.0f));
+		model1 = glm::rotate(model1, glm::radians(-angle * 100), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		renderer.UpdateModel(0, model0);
+		renderer.UpdateModel(1, model1);
 
 		if (0 == glfwGetWindowAttrib(window, GLFW_ICONIFIED))
 			renderer.Draw();

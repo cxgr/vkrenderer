@@ -6,6 +6,11 @@
 #include <vector>
 #include "Utils.h"
 
+struct UboModel
+{
+	glm::mat4 model;
+};
+
 class Mesh
 {
 public:
@@ -13,6 +18,9 @@ public:
 	Mesh(VkPhysicalDevice newPhysDevice, VkDevice newLogicDevice,
 		VkQueue transferQueue, VkCommandPool transferCmdPool,
 		std::vector<Vertex>* verts, std::vector<uint32_t>* indices);
+
+	void SetModel(glm::mat4 newModel);
+	UboModel GetModel();
 
 	int GetVertexCount();
 	VkBuffer GetVertexBuffer();
@@ -25,6 +33,8 @@ public:
 	~Mesh();
 
 private:
+	UboModel uboModel;
+
 	int vertexCount;
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;

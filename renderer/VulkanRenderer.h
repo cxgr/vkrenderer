@@ -20,7 +20,7 @@ class VulkanRenderer
 public:
 	VulkanRenderer();
 	int Init(GLFWwindow* window);
-	void UpdateModel(glm::mat4 newModel);
+	void UpdateModel(int meshId, glm::mat4 newModel);
 	void Draw();
 	void Cleanup();
 	~VulkanRenderer();
@@ -30,12 +30,11 @@ private:
 
 	std::vector<Mesh> meshes;
 
-	struct MVP
+	struct UboViewProjection
 	{
 		glm::mat4 projection;
 		glm::mat4 view;
-		glm::mat4 model;
-	} mvp;
+	} uboViewProjection;
 
 	GLFWwindow* window;
 	VkInstance vkInstance;
@@ -58,8 +57,15 @@ private:
 	VkDescriptorPool descriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
 
-	std::vector<VkBuffer> uniformBuffers;
-	std::vector<VkDeviceMemory> uniformBufferMemories;
+	std::vector<VkBuffer> vpUniformBuffers;
+	std::vector<VkDeviceMemory> vpUniformBufferMemories;
+
+	std::vector<VkBuffer> modelDynUniformBuffers;
+	std::vector<VkDeviceMemory> modelDynUniformBufferMemories;
+
+	VkDeviceSize minUniformBufferOffset;
+	size_t modelUniformAlignment;
+	UboModel* modelTransferSpace;
 
 	VkPipeline graphicsPipeline;
 	VkPipelineLayout pipelineLayout;
@@ -95,7 +101,7 @@ private:
 
 	void UpdateUniformBuffers(uint32_t imgIdx);
 
-	void RecordCommands();
+	void RecordCommands(uint32_t currentImage);
 
 	void GetPhysicalDevice();
 	QueueFamilyIndices GetQueueFamilyIndices(VkPhysicalDevice device);
@@ -110,4 +116,6 @@ private:
 
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkShaderModule CreateShaderModule(const std::vector<char> &shader);
+
+	void AllocateDynamicBufferTransferSpace();
 };
