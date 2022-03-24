@@ -54,18 +54,20 @@ private:
 	std::vector<VkCommandBuffer> commandBuffers;
 
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkPushConstantRange pushConstantRange;
+
 	VkDescriptorPool descriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
 
 	std::vector<VkBuffer> vpUniformBuffers;
 	std::vector<VkDeviceMemory> vpUniformBufferMemories;
 
-	std::vector<VkBuffer> modelDynUniformBuffers;
-	std::vector<VkDeviceMemory> modelDynUniformBufferMemories;
+	//std::vector<VkBuffer> modelDynUniformBuffers;
+	//std::vector<VkDeviceMemory> modelDynUniformBufferMemories;
 
-	VkDeviceSize minUniformBufferOffset;
-	size_t modelUniformAlignment;
-	UboModel* modelTransferSpace;
+	//VkDeviceSize minUniformBufferOffset;
+	//size_t modelUniformAlignment;
+	//UboModel* modelTransferSpace;
 
 	VkPipeline graphicsPipeline;
 	VkPipelineLayout pipelineLayout;
@@ -89,6 +91,7 @@ private:
 	void CreateSwapchain();
 	void CreateRenderPass();
 	void CreateDescriptorSetLayout();
+	void CreatePushConstantRange();
 	void CreateGraphicsPipeline();
 	void CreateFramebuffers();
 	void CreateCommandPool();
@@ -101,7 +104,7 @@ private:
 
 	void UpdateUniformBuffers(uint32_t imgIdx);
 
-	void RecordCommands(uint32_t currentImage);
+	void RecordCommands(uint32_t imgIdx);
 
 	void GetPhysicalDevice();
 	QueueFamilyIndices GetQueueFamilyIndices(VkPhysicalDevice device);
@@ -117,5 +120,5 @@ private:
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkShaderModule CreateShaderModule(const std::vector<char> &shader);
 
-	void AllocateDynamicBufferTransferSpace();
+	//void AllocateDynamicBufferTransferSpace();
 };
