@@ -62,13 +62,6 @@ private:
 	std::vector<VkBuffer> vpUniformBuffers;
 	std::vector<VkDeviceMemory> vpUniformBufferMemories;
 
-	//std::vector<VkBuffer> modelDynUniformBuffers;
-	//std::vector<VkDeviceMemory> modelDynUniformBufferMemories;
-
-	//VkDeviceSize minUniformBufferOffset;
-	//size_t modelUniformAlignment;
-	//UboModel* modelTransferSpace;
-
 	VkPipeline graphicsPipeline;
 	VkPipelineLayout pipelineLayout;
 	VkRenderPass renderPass;
@@ -119,6 +112,4 @@ private:
 
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkShaderModule CreateShaderModule(const std::vector<char> &shader);
-
-	//void AllocateDynamicBufferTransferSpace();
 };

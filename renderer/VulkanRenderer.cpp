@@ -40,17 +40,17 @@ int VulkanRenderer::Init(GLFWwindow* window)
 		std::vector<Vertex> meshVerts1 =
 		{
 			{{-0.4, 0.4, 0.0}, {1.0, 0.0, 0.0}},
-			{{-0.4, -0.4, 0.0}, {0.0, 1.0, 0.0}},
-			{{0.4, -0.4, 0.0}, {0.0, 0.0, 1.0}},
-			{{0.4, 0.4, 0.0}, {1.0, 1.0, 0.0}}
+			{{-0.4, -0.4, 0.0}, {1.0, 0.0, 0.0}},
+			{{0.4, -0.4, 0.0}, {1.0, 0.0, 1.0}},
+			{{0.4, 0.4, 0.0}, {1.0, 0.0, 0.0}}
 		};
 
 		std::vector<Vertex> meshVerts2 =
 		{
-			{{-0.25, 0.6, 0.0}, {1.0, 0.0, 0.0}},
-			{{-0.25, -0.6, 0.0}, {0.0, 1.0, 0.0}},
+			{{-0.25, 0.6, 0.0}, {0.0, 0.0, 1.0}},
+			{{-0.25, -0.6, 0.0}, {0.0, 0.0, 1.0}},
 			{{0.25, -0.6, 0.0}, {0.0, 0.0, 1.0}},
-			{{0.25, 0.6, 0.0}, {1.0, 1.0, 0.0}}
+			{{0.25, 0.6, 0.0}, {0.0, 0.0, 1.0}}
 		};
 
 		std::vector<uint32_t> meshIdx =
@@ -140,20 +140,14 @@ void VulkanRenderer::Cleanup()
 {
 	vkDeviceWaitIdle(mainDevice.logicalDevice);
 
-	//_aligned_free(modelTransferSpace);
-
 	vkDestroyDescriptorPool(mainDevice.logicalDevice, descriptorPool, nullptr);
 	vkDestroyDescriptorSetLayout(mainDevice.logicalDevice, descriptorSetLayout, nullptr);
 
 	for (const auto& ub : vpUniformBuffers)
 		vkDestroyBuffer(mainDevice.logicalDevice, ub, nullptr);
-	/*for (const auto& ub : modelDynUniformBuffers)
-		vkDestroyBuffer(mainDevice.logicalDevice, ub, nullptr);*/
 
 	for (const auto& ubm : vpUniformBufferMemories)
 		vkFreeMemory(mainDevice.logicalDevice, ubm, nullptr);
-	/*for (const auto& ubm : modelDynUniformBufferMemories)
-		vkFreeMemory(mainDevice.logicalDevice, ubm, nullptr);*/
 
 	for (auto& m : meshes)
 		m.DestroyBuffers();
@@ -427,7 +421,6 @@ void VulkanRenderer::CreateGraphicsPipeline()
 	attributeDescs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 	attributeDescs[1].offset = offsetof(Vertex, col);
 
-	//vert input
 	VkPipelineVertexInputStateCreateInfo viCreateInfo = {};
 	viCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	viCreateInfo.vertexBindingDescriptionCount = 1;
@@ -458,16 +451,6 @@ void VulkanRenderer::CreateGraphicsPipeline()
 	vsCreateInfo.pViewports = &viewport;
 	vsCreateInfo.scissorCount = 1;
 	vsCreateInfo.pScissors = &scissor;
-
-	/*
-	std::vector<VkDynamicState> dynStates;
-	dynStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);		//vkCmdSetViewport(buffer, 0, 1, &viewport)
-	dynStates.push_back(VK_DYNAMIC_STATE_SCISSOR);		//vkCmdSetScissor(buffer, 0, 1, &viewport)
-	VkPipelineDynamicStateCreateInfo dsCreateInfo = {};
-	dsCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dsCreateInfo.dynamicStateCount = static_cast<uint32_t>(dynStates.size());
-	dsCreateInfo.pDynamicStates = dynStates.data();
-	*/
 
 	VkPipelineRasterizationStateCreateInfo rastCreateInfo = {};
 	rastCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -619,23 +602,15 @@ void VulkanRenderer::CreateUniformBuffers()
 {
 	//one buffer per sc image
 	VkDeviceSize vpBufferSize = sizeof(UboViewProjection);
-	//VkDeviceSize modelBufferSize = modelUniformAlignment * MAX_MESHES;
 
 	vpUniformBuffers.resize(swapchainImages.size());
 	vpUniformBufferMemories.resize(swapchainImages.size());
-
-	//modelDynUniformBuffers.resize(swapchainImages.size());
-	//modelDynUniformBufferMemories.resize(swapchainImages.size());
 
 	for (size_t i = 0; i < swapchainImages.size(); ++i)
 	{
 		CreateBuffer(mainDevice.physicalDevice, mainDevice.logicalDevice, vpBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 			&vpUniformBuffers[i], &vpUniformBufferMemories[i]);
-
-		/*CreateBuffer(mainDevice.physicalDevice, mainDevice.logicalDevice, modelBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			&modelDynUniformBuffers[i], &modelDynUniformBufferMemories[i]);*/
 	}
 }
 
@@ -644,13 +619,6 @@ void VulkanRenderer::CreateDescriptorPool()
 	VkDescriptorPoolSize vpPoolSize = {};
 	vpPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	vpPoolSize.descriptorCount = static_cast<uint32_t>(vpUniformBuffers.size());
-
-	//DYN BUFFERS
-	/*
-	VkDescriptorPoolSize modelPoolSize = {};
-	modelPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	modelPoolSize.descriptorCount = static_cast<uint32_t>(modelDynUniformBuffers.size());
-	*/
 
 	std::vector<VkDescriptorPoolSize> poolSizes = { vpPoolSize };
 
@@ -694,23 +662,6 @@ void VulkanRenderer::CreateDescriptorSets()
 		vpSetWrite.descriptorCount = 1;
 		vpSetWrite.pBufferInfo = &vpBufferInfo;
 
-		//DYN BUFFERS
-		/*
-		VkDescriptorBufferInfo modelBufferInfo = {};
-		modelBufferInfo.buffer = modelDynUniformBuffers[i];
-		modelBufferInfo.offset = 0;
-		modelBufferInfo.range = modelUniformAlignment;
-
-		VkWriteDescriptorSet modelSetWrite = {};
-		modelSetWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		modelSetWrite.dstSet = descriptorSets[i];
-		modelSetWrite.dstBinding = 1;
-		modelSetWrite.dstArrayElement = 0;
-		modelSetWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-		modelSetWrite.descriptorCount = 1;
-		modelSetWrite.pBufferInfo = &modelBufferInfo;
-		*/
-
 		std::vector<VkWriteDescriptorSet> setWrites = { vpSetWrite };
 
 		vkUpdateDescriptorSets(mainDevice.logicalDevice, static_cast<uint32_t>(setWrites.size()),
@@ -724,21 +675,6 @@ void VulkanRenderer::UpdateUniformBuffers(uint32_t imgIdx)
 	vkMapMemory(mainDevice.logicalDevice, vpUniformBufferMemories[imgIdx], 0, sizeof(UboViewProjection), 0, &data);
 	memcpy(data, &uboViewProjection, sizeof(UboViewProjection));
 	vkUnmapMemory(mainDevice.logicalDevice, vpUniformBufferMemories[imgIdx]);
-
-	//DYN BUFFERS
-	/*
-	for (size_t i = 0; i < meshes.size(); ++i)
-	{
-		auto model = reinterpret_cast<UboModel*>(reinterpret_cast<uint64_t>(modelTransferSpace) + (i * modelUniformAlignment));
-		*model = meshes[i].GetModel();
-	}
-
-	const auto mapSize = modelUniformAlignment * meshes.size();
-	vkMapMemory(mainDevice.logicalDevice, modelDynUniformBufferMemories[imgIdx], 0,
-		mapSize, 0, &data);
-	memcpy(data, modelTransferSpace, mapSize);
-	vkUnmapMemory(mainDevice.logicalDevice, modelDynUniformBufferMemories[imgIdx]);
-	*/
 }
 
 void VulkanRenderer::RecordCommands(uint32_t imgIdx)
@@ -773,11 +709,6 @@ void VulkanRenderer::RecordCommands(uint32_t imgIdx)
 			VkDeviceSize offsets[] = { 0 };
 			vkCmdBindVertexBuffers(commandBuffers[imgIdx], 0, 1, vertBuffers, offsets);
 			vkCmdBindIndexBuffer(commandBuffers[imgIdx], meshes[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-
-			//DYN BUFFERS
-			/*uint32_t dynamicOffset = j * static_cast<uint32_t>(modelUniformAlignment);
-			vkCmdBindDescriptorSets(commandBuffers[imgIdx], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-				0, 1, &descriptorSets[imgIdx], 1, &dynamicOffset);*/
 
 			auto m = meshes[j].GetModel();
 			vkCmdPushConstants(commandBuffers[imgIdx], pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
@@ -858,16 +789,6 @@ void VulkanRenderer::CreateDescriptorSetLayout()
 	vpBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	vpBinding.pImmutableSamplers = nullptr;
 
-	//DYN BUFFERS
-	/*
-	VkDescriptorSetLayoutBinding modelBinding = {};
-	modelBinding.binding = 1;
-	modelBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	modelBinding.descriptorCount = 1;
-	modelBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	modelBinding.pImmutableSamplers = nullptr;
-	*/
-
 	std::vector<VkDescriptorSetLayoutBinding> bindings = { vpBinding };
 
 	VkDescriptorSetLayoutCreateInfo createInfo = {};
@@ -908,8 +829,6 @@ void VulkanRenderer::GetPhysicalDevice()
 
 	VkPhysicalDeviceProperties deviceProps;
 	vkGetPhysicalDeviceProperties(mainDevice.physicalDevice, &deviceProps);
-
-	//minUniformBufferOffset = deviceProps.limits.minUniformBufferOffsetAlignment;
 }
 
 QueueFamilyIndices VulkanRenderer::GetQueueFamilyIndices(VkPhysicalDevice device)
@@ -1104,12 +1023,3 @@ VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<char>& shade
 
 	return shaderModule;
 }
-
-//DYN BUFFERS
-/*
-void VulkanRenderer::AllocateDynamicBufferTransferSpace()
-{
-	modelUniformAlignment = (sizeof(UboModel) + minUniformBufferOffset - 1) & ~(minUniformBufferOffset - 1);
-	modelTransferSpace = (UboModel*)_aligned_malloc(modelUniformAlignment * MAX_MESHES, modelUniformAlignment); 
-}
-*/
