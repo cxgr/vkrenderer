@@ -46,7 +46,7 @@ int main()
 		glm::mat4 model0(1.0f);
 		glm::mat4 model1(1.0f);
 
-		model0 = glm::translate(model0, glm::vec3(-.2f, 0.0f, -5.0f));
+		model0 = glm::translate(model0, glm::vec3(-.2f, 0.0f, -3.0f));
 		model0 = glm::rotate(model0, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		model1 = glm::translate(model1, glm::vec3(.2f, 0.0f, -2.0f));

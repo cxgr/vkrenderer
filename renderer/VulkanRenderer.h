@@ -53,6 +53,14 @@ private:
 	std::vector<VkFramebuffer> swapchainFramebuffers;
 	std::vector<VkCommandBuffer> commandBuffers;
 
+	struct DepthBuffer
+	{
+		VkImage img;
+		VkDeviceMemory memory;
+		VkImageView imgView;
+		VkFormat format;
+	} depthBuffer;
+
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPushConstantRange pushConstantRange;
 
@@ -86,6 +94,8 @@ private:
 	void CreateDescriptorSetLayout();
 	void CreatePushConstantRange();
 	void CreateGraphicsPipeline();
+
+	void CreateDepthBufferImage();
 	void CreateFramebuffers();
 	void CreateCommandPool();
 	void CreateCommandBuffers();
@@ -109,7 +119,10 @@ private:
 	VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 	VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentationModes);
 	VkExtent2D ChooseExtent(const VkSurfaceCapabilitiesKHR& surfaceCapabilities);
+	VkFormat ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
 
+	VkImage CreateImage(uint32_t wid, uint32_t hei, VkFormat format, VkDeviceMemory* imgMemory,
+		VkImageTiling tiling, VkImageUsageFlags useFlags, VkMemoryPropertyFlags propFlags);
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkShaderModule CreateShaderModule(const std::vector<char> &shader);
 };
