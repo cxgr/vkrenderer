@@ -1,5 +1,6 @@
 #define GLFW_INCLUDE_VULKAN
 #define	GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define STB_IMAGE_IMPLEMENTATION
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -31,6 +32,12 @@ int main()
 	auto deltaTime = 0.0f;
 	auto lastTime = 0.0f;
 
+
+	//CreateMeshModel("Models\\10483_baseball_v1_L3.obj");
+	//CreateMeshModel("Models\\1.obj");
+	//CreateMeshModel("Models\\cottage_fbx.fbx");
+	auto houseModel = renderer.CreateMeshModel("Models\\abandoned_cottage.fbx");
+
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
@@ -43,17 +50,11 @@ int main()
 		if (angle > 360.0f)
 			angle -= 360.0f;
 
-		glm::mat4 model0(1.0f);
-		glm::mat4 model1(1.0f);
+		auto m = glm::mat4(1.0);
+		m = glm::scale(m, glm::vec3(0.1f));
+		m = glm::rotate(m, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-		model0 = glm::translate(model0, glm::vec3(-.2f, 0.0f, -3.0f));
-		model0 = glm::rotate(model0, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		model1 = glm::translate(model1, glm::vec3(.2f, 0.0f, -2.0f));
-		model1 = glm::rotate(model1, glm::radians(-angle * 10), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		renderer.UpdateModel(0, model0);
-		renderer.UpdateModel(1, model1);
+		renderer.UpdateModel(houseModel, m);
 
 		if (0 == glfwGetWindowAttrib(window, GLFW_ICONIFIED))
 			renderer.Draw();

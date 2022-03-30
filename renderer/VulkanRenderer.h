@@ -5,6 +5,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include <stdexcept>
 #include <vector>
@@ -12,23 +15,31 @@
 #include <algorithm>
 #include <array>
 
+#include "stb_image.h"
+
 #include "Utils.h"
 #include "Mesh.h"
+#include "MeshModel.h"
 
 class VulkanRenderer
 {
 public:
+	std::vector<MeshModel> models;
+
 	VulkanRenderer();
 	int Init(GLFWwindow* window);
-	void UpdateModel(int meshId, glm::mat4 newModel);
+	void InitScene();
+
+	size_t CreateMeshModel(std::string fileName);
+	glm::mat4 GetModel(size_t id);
+	void UpdateModel(size_t id, glm::mat4 newModel);
+
 	void Draw();
 	void Cleanup();
 	~VulkanRenderer();
 
 private:
 	int frameIdx = 0;
-
-	std::vector<Mesh> meshes;
 
 	struct UboViewProjection
 	{
@@ -61,14 +72,26 @@ private:
 		VkFormat format;
 	} depthBuffer;
 
+	VkSampler texSampler;
+
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSetLayout samplerSetLayout;
 	VkPushConstantRange pushConstantRange;
 
 	VkDescriptorPool descriptorPool;
-	std::vector<VkDescriptorSet> descriptorSets;
+	VkDescriptorPool samplerDescriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets; //1 per swapchain img
+	std::vector<VkDescriptorSet> samplerDescriptorSets; //1 per texture
 
 	std::vector<VkBuffer> vpUniformBuffers;
 	std::vector<VkDeviceMemory> vpUniformBufferMemories;
+
+	//std::vector<MeshModel> models;
+
+	std::vector<VkImage> texImages;
+	std::vector<VkDeviceMemory> texImgMemories;
+	std::vector<VkImageView> texImgViews;
+
 
 	VkPipeline graphicsPipeline;
 	VkPipelineLayout pipelineLayout;
@@ -91,7 +114,7 @@ private:
 	void CreateSurface();
 	void CreateSwapchain();
 	void CreateRenderPass();
-	void CreateDescriptorSetLayout();
+	void CreateDescriptorSetLayouts();
 	void CreatePushConstantRange();
 	void CreateGraphicsPipeline();
 
@@ -100,9 +123,10 @@ private:
 	void CreateCommandPool();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
+	void CreateTexSampler();
 
 	void CreateUniformBuffers();
-	void CreateDescriptorPool();
+	void CreateDescriptorPools();
 	void CreateDescriptorSets();
 
 	void UpdateUniformBuffers(uint32_t imgIdx);
@@ -113,7 +137,7 @@ private:
 	QueueFamilyIndices GetQueueFamilyIndices(VkPhysicalDevice device);
 	SwapchainProperties GetSwapchainProperties(VkPhysicalDevice device);
 
-	bool CheckInstanceExtensionSupport(std::vector<const char*>* extensions);
+	bool CheckInstanceExtensionSupport(std::vector<const char*>* extsToCheck);
 	bool CheckDeviceSuitable(VkPhysicalDevice device);
 
 	VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
@@ -125,4 +149,10 @@ private:
 		VkImageTiling tiling, VkImageUsageFlags useFlags, VkMemoryPropertyFlags propFlags);
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	VkShaderModule CreateShaderModule(const std::vector<char> &shader);
+
+	size_t CreateTextureImage(std::string fileName);
+	size_t CreateTexture(std::string fileName);
+	size_t CreateTextureDescriptor(VkImageView texImgView);
+
+	stbi_uc* LoadImage(std::string fileName, int* wid, int* hei, VkDeviceSize* imgSize);
 };
